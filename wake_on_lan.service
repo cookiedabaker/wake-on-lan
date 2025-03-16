@@ -1,0 +1,14 @@
+[Unit]
+Description=Wake On LAN Webapp
+Documentation=https://github.com/cookiedabaker/wake-on-lan
+After=network.target
+
+[Service]
+User=wakeonlan
+WorkingDirectory=/home/wake-on-lan
+# ExecStart=/usr/bin/python3 -m flask --app wol_server run --host=0.0.0.0
+ExecStart=gunicorn -w 2 --bind 0.0.0.0:5000 --pid wol_server:app
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
