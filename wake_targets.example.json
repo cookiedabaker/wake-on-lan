@@ -1,0 +1,10 @@
+{
+  "main-pc": { 
+    "label": "Main PC", 
+    "mac": "AA:BB:CC:DD:EE:FF" 
+  },
+  "media-server": { 
+    "label": "Media Server", 
+    "mac": "11:22:33:44:55:66" 
+  }
+}
