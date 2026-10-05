@@ -1,14 +1,28 @@
 [Unit]
-Description=Wake On LAN Webapp
+Description=Wake-on-LAN endpoint
 Documentation=https://github.com/cookiedabaker/wake-on-lan
 After=network.target
 
 [Service]
+Type=simple
 User=wakeonlan
-WorkingDirectory=/home/wake-on-lan
-# ExecStart=/usr/bin/python3 -m flask --app wol_server run --host=0.0.0.0
-ExecStart=gunicorn -w 2 --bind 0.0.0.0:5000 --pid wol_server:app
-Restart=always
+Group=wakeonlan
+WorkingDirectory=/opt/wol-endpoint
+EnvironmentFile=/opt/wol-endpoint/config.env
+ExecStart=/opt/wol-endpoint/venv/bin/gunicorn \
+    --workers 2 \
+    --bind 127.0.0.1:5001 \
+    app:app
+Restart=on-failure
+RestartSec=5
+
+# Hardening — safe defaults for a small single-purpose service.
+# Loosen any of these if the app needs broader access than expected.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/wol-endpoint
 
 [Install]
 WantedBy=multi-user.target
