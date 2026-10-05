@@ -7,7 +7,7 @@ import struct
 import re
 import argparse
 
-_version = (1, 0, 0)
+_version = (1, 1, 0)
 __version__ = ".".join(str(n) for n in _version)
 
 
@@ -35,24 +35,6 @@ def formatMagicPacket(mac_address):
     mac_bytes = bytes.fromhex(cleaned)
     packet = b'\xff' * 6 + mac_bytes * 16
     return packet
-
-    check_format = re.fullmatch(
-        '(([0-9A-Fa-f]{2}[-:\.]){5}[0-9A-Fa-f]{2})|'
-        '(([0-9A-Fa-f]{4}[-:\.]){2}[0-9A-Fa-f]{4})',
-        mac_address)
-
-    if not check_format:
-        raise ValueError("Incorrect MAC address format.")
-
-    # Convert hex to packed binary
-    mac_formatted = b''
-    for h in mac_address.split(mac_address[2]):
-        mac_formatted = b''.join([mac_formatted, struct.pack('B', int(h, 16))])
-
-    # Add the magic
-    packet = b''.join([b'\xff' * 6, mac_formatted * 16])
-
-    return(packet)
 
 
 if __name__ == '__main__':
