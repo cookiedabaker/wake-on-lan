@@ -20,8 +20,22 @@ def wakeOnLAN(magic_packet: bytes):
     s.sendto(magic_packet, ('<broadcast>', 7))
 
 def formatMagicPacket(mac_address):
-    """Takes a MAC address and formats it into a the correct format for broadcast."""
+    """Takes a MAC address in any common format and formats it for broadcast.
+ 
+    Accepts colon-, dash-, or dot-separated groupings, or no separator at
+    all (e.g. AA:BB:CC:DD:EE:FF, AA-BB-CC-DD-EE-FF, AABB.CCDD.EEFF,
+    AABBCCDDEEFF) by stripping separator characters before validating.
+    """
     
+    cleaned = re.sub(r'[:\-.\s]', '', mac_address)
+ 
+    if not re.fullmatch('[0-9A-Fa-f]{12}', cleaned):
+        raise ValueError(f"Incorrect MAC address format: {mac_address!r}")
+ 
+    mac_bytes = bytes.fromhex(cleaned)
+    packet = b'\xff' * 6 + mac_bytes * 16
+    return packet
+
     check_format = re.fullmatch(
         '(([0-9A-Fa-f]{2}[-:\.]){5}[0-9A-Fa-f]{2})|'
         '(([0-9A-Fa-f]{4}[-:\.]){2}[0-9A-Fa-f]{4})',
