@@ -10,10 +10,18 @@ To deploy the server and endpoint, refer to the following instructions.
 
 ### 0. Copy Project
 
-- Deploy a server/container with a user called "wakeonlan".
+- Deploy a server/container with a user called "wakeonlan":
+
+```bash
+useradd --system --no-create-home --shell /usr/sbin/nologin wakeonlan
+```
 
 - Copy the required project files into `/opt/wol-endpoint/`:
 
+```bash
+# If needed, create the folder:
+mkdir -p /opt/wol-endpoint
+```
 
 ```
 /opt/wol-endpoint/...
@@ -26,7 +34,7 @@ To deploy the server and endpoint, refer to the following instructions.
 └── wol_server.py
 ```
 
-- Create the virtual environment with the following command:
+- Create the virtual environment:
 
 ```bash
 python3 -m venv venv
@@ -34,7 +42,20 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-- Copy `wake_on_lan.service` to `/etc/systemd/system/`.
+- Copy/move `wake_on_lan.service` to `/etc/systemd/system/`.
+
+- Set the user permissions:
+
+```bash
+# Give ownership to the 'wakeonlan' account.
+chown -R root:wakeonlan /opt/wol-endpoint
+chmod -R 750 /opt/wol-endpoint
+chmod 640 /opt/wol-endpoint/wake_targets.json
+
+# Lock the environment config file to root.
+chown root:root /opt/wol-endpoint/config.env
+chmod 600 /opt/wol-endpoint/config.env
+```
 
 ### 1. Environment Variables
  
@@ -45,7 +66,7 @@ a systemd unit's `EnvironmentFile`, or an `.env` loaded before `app.run()`):
 |---------------------|----------------------------------------------|----------------------------------------------------------------|
 | `CF_TEAM_DOMAIN`    | `https://yourteam.cloudflareaccess.com`      | Your Cloudflare Zero Trust team domain                         |
 | `CF_POLICY_AUD`     | (from the Access app's Overview tab)         | AUD tag identifying this specific Access application           |
-| `WAKE_TARGETS_FILE` | `/opt/wol-endpoint/config/wake_targets.json` | Path to your real (non-example) device allowlist               |
+| `WAKE_TARGETS_FILE` | `/opt/wol-endpoint/wake_targets.json`        | Path to your real (non-example) device allowlist               |
 
 An example environment file and systemd config is provided.
 
@@ -76,8 +97,12 @@ systemctl enable --now wake_on_lan
 > grey-clouded hostname sitting on the same Apache instance would break once
 > `SSLVerifyClient require` is enforced.
 
-### 4. Apache Authenticated Origin Pulls
- 
+### 4. Apache Setup & Authenticated Origin Pulls
+
+An example Apache configuration file is included in this repository.
+
+For basic requirements for setting up this endpoint, download the authenticated origin pull CA file:
+
 ```bash
 wget https://developers.cloudflare.com/ssl/static/authenticated_origin_pull_ca.pem \
   -O /etc/apache2/ssl/cloudflare-origin-pull-ca.pem
@@ -106,8 +131,8 @@ Adjust the container address/port to match your setup:
  
 ```apache
 ProxyPreserveHost On
-ProxyPass /wake http://localhost:5001/wake
-ProxyPassReverse /wake http://localhost:5001/wake
+ProxyPass ^/wake(/.*)?$ http://localhost:5001/wake$1
+ProxyPassReverse /wake/ http://localhost:5001/wake/
 RequestHeader set X-Forwarded-Proto "https"
 ```
 
