@@ -7,16 +7,17 @@ After=network.target
 Type=simple
 User=wakeonlan
 Group=wakeonlan
+Environment=HOME=/tmp
 WorkingDirectory=/opt/wol-endpoint
 EnvironmentFile=/opt/wol-endpoint/config.env
 ExecStart=/opt/wol-endpoint/venv/bin/gunicorn \
     --workers 2 \
-    --bind 127.0.0.1:5001 \
-    app:app
+    --bind 0.0.0.0:5001 \
+    wol_server:app
 Restart=on-failure
 RestartSec=5
 
-# Hardening — safe defaults for a small single-purpose service.
+# Hardening - safe defaults for a small single-purpose service.
 # Loosen any of these if the app needs broader access than expected.
 NoNewPrivileges=true
 PrivateTmp=true
